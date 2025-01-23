@@ -13,6 +13,7 @@ const CreateBundle = () => {
     const [products, setProducts] = useState([]);
     const [alertMessage, setAlertMessage] = useState(""); // State untuk pesan alert
     const [alertType, setAlertType] = useState(""); // State untuk tipe alert (success atau error)
+    const [isStockReadOnly, setIsStockReadOnly] = useState(false); // Untuk mengatur apakah stock bisa diedit
 
     useEffect(() => {
         fetchProducts()
@@ -25,7 +26,38 @@ const CreateBundle = () => {
     }, []);
 
     const handleChange = (e) => {
-        setFormData({ ...formData, [e.target.name]: e.target.value });
+        const { name, value } = e.target;
+        setFormData({ ...formData, [name]: value });
+
+        // Jika nama produk dan bundle sama, set stok bundle mengikuti stok produk
+        if (name === "name" && value === formData.product_id) {
+            const selectedProduct = products.find(product => product.id === formData.product_id);
+            if (selectedProduct) {
+                setFormData({
+                    ...formData,
+                    stock: selectedProduct.stock, // Set stock bundle sama dengan stock product
+                });
+                setIsStockReadOnly(true); // Set stok menjadi read-only
+            }
+        }
+    };
+
+    const handleProductChange = (e) => {
+        const selectedProductId = e.target.value;
+        setFormData({
+            ...formData,
+            product_id: selectedProductId,
+            stock: "", // Reset stock menjadi kosong atau default value
+        });
+
+        const selectedProduct = products.find(product => product.id === selectedProductId);
+        if (selectedProduct) {
+            setFormData({
+                ...formData,
+                stock: selectedProduct.stock, // Set stock bundle sesuai stock product
+            });
+            setIsStockReadOnly(false); // Biarkan stok bisa diedit jika produk baru dipilih
+        }
     };
 
     const handleSubmit = (e) => {
@@ -87,7 +119,7 @@ const CreateBundle = () => {
                 <select
                     name="product_id"
                     className="form-control"
-                    onChange={handleChange}
+                    onChange={handleProductChange}
                     required
                     value={formData.product_id}
                 >
@@ -117,6 +149,7 @@ const CreateBundle = () => {
                     onChange={handleChange}
                     required
                     value={formData.stock}
+                    readOnly={isStockReadOnly} // Stok menjadi read-only jika produk dan nama bundle sama
                 />
             </div>
             <div className="mb-3">
