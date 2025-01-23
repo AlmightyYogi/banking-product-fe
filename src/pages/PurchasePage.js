@@ -11,71 +11,96 @@ const PurchasePage = () => {
     const [alertType, setAlertType] = useState("");
 
     useEffect(() => {
-        fetchProducts().then((response) => {
-            setProducts(response.data);
-        }).catch((error) => {
-            console.error("Error fetching products", error);
-        });
+        fetchProducts()
+            .then((response) => {
+                setProducts(response.data);
+            })
+            .catch((error) => {
+                console.error("Error fetching products", error);
+            });
 
-        fetchBundles().then((response) => {
-            setBundles(response.data);
-        }).catch((error) => {
-            console.error("Error fetching bundles", error);
-        });
+        fetchBundles()
+            .then((response) => {
+                setBundles(response.data);
+            })
+            .catch((error) => {
+                console.error("Error fetching bundles", error);
+            });
     }, []);
 
-    const handleProductChange = (e) => {
-        const { value, checked } = e.target;
-        const quantityInput = e.target.closest('.form-check').querySelector('input[type="number"]'); // Ambil input quantity dalam div yang sama
-        const quantity = parseInt(quantityInput.value || 1); // Ambil nilai quantity dari input
-
-        if (quantity < 1) {
-            setAlertMessage("Quantity must be at least 1.");
-            setAlertType("danger");
-            toast.error("Quantity must be at least 1.");
-            return;
-        }
+    const handleProductChange = (e, productId, quantity) => {
+        const { checked } = e.target;
 
         setSelectedProducts((prev) => {
             const updated = [...prev];
-            const index = updated.findIndex((product) => product.id === parseInt(value));
+            const index = updated.findIndex((product) => product.id === productId);
+
             if (checked) {
                 if (index === -1) {
-                    updated.push({ id: value, quantity: quantity });
+                    updated.push({ id: productId, quantity });
                 } else {
                     updated[index].quantity = quantity;
                 }
             } else {
-                updated.splice(index, 1);
+                if (index !== -1) {
+                    updated.splice(index, 1);
+                }
             }
+
             return updated;
         });
     };
 
-    const handleBundleChange = (e) => {
-        const { value, checked } = e.target;
-        const quantityInput = e.target.closest('.form-check').querySelector('input[type="number"]'); // Ambil input quantity dalam div yang sama
-        const quantity = parseInt(quantityInput.value || 1); // Ambil nilai quantity dari input
+    const handleProductQuantityChange = (e, productId) => {
+        const quantity = parseInt(e.target.value) || 1;
 
-        if (quantity < 1) {
-            setAlertMessage("Quantity must be at least 1.");
-            setAlertType("danger");
-            toast.error("Quantity must be at least 1.");
-            return;
-        }
+        setSelectedProducts((prev) => {
+            const updated = [...prev];
+            const index = updated.findIndex((product) => product.id === productId);
+
+            if (index !== -1) {
+                updated[index].quantity = quantity;
+            }
+
+            return updated;
+        });
+    };
+
+    const handleBundleChange = (e, bundleId) => {
+        const { checked } = e.target;
+        const quantity = checked ? 1 : 0; // Tetapkan jumlah default ke 1 jika dicentang, 0 jika tidak dicentang.
 
         setSelectedBundles((prev) => {
             const updated = [...prev];
-            const index = updated.findIndex((bundle) => bundle.id === parseInt(value));
+            const index = updated.findIndex((bundle) => bundle.id === bundleId);
+
             if (checked) {
                 if (index === -1) {
-                    updated.push({ id: value, quantity: quantity });
+                    updated.push({ id: bundleId, quantity });
                 } else {
                     updated[index].quantity = quantity;
                 }
             } else {
-                updated.splice(index, 1);
+                if (index !== -1) {
+                    updated.splice(index, 1);
+                }
             }
+
+            return updated;
+        });
+    };
+
+    const handleBundleQuantityChange = (e, bundleId) => {
+        const quantity = parseInt(e.target.value) || 1; // Pastikan kuantitas adalah bilangan bulat yang valid, defaultnya adalah 1.
+
+        setSelectedBundles((prev) => {
+            const updated = [...prev];
+            const index = updated.findIndex((bundle) => bundle.id === bundleId);
+
+            if (index !== -1) {
+                updated[index].quantity = quantity; // Perbarui kuantitas untuk paket yang dipilih.
+            }
+
             return updated;
         });
     };
@@ -83,9 +108,8 @@ const PurchasePage = () => {
     const handleSubmit = (e) => {
         e.preventDefault();
 
-        // Validasi input
         if (selectedProducts.length === 0 && selectedBundles.length === 0) {
-            setAlertMessage("No products or bundles selected for purchase.")
+            setAlertMessage("No products or bundles selected for purchase.");
             setAlertType("danger");
             return;
         }
@@ -97,7 +121,6 @@ const PurchasePage = () => {
                     setAlertType("success");
                     toast.success(`Purchase successful! Total cost: Rp.${response.data.totalCost}`);
 
-                    // Refresh data produk dan bundle
                     setTimeout(() => {
                         window.location.reload();
                     }, 2000);
@@ -121,7 +144,6 @@ const PurchasePage = () => {
         <form onSubmit={handleSubmit} className="w-50 mx-auto mt-4">
             <h2>Purchase</h2>
 
-            {/* Alert menampilkan pesan */}
             {alertMessage && (
                 <div className={`alert alert-${alertType}`} role="alert">
                     {alertMessage}
@@ -136,8 +158,7 @@ const PurchasePage = () => {
                             type="checkbox"
                             className="form-check-input"
                             id={`product-${product.id}`}
-                            value={product.id}
-                            onChange={handleProductChange}
+                            onChange={(e) => handleProductChange(e, product.id, 1)}
                         />
                         <label className="form-check-label" htmlFor={`product-${product.id}`}>
                             {product.name} - Rp.{product.price} (Stock: {product.stock})
@@ -148,7 +169,7 @@ const PurchasePage = () => {
                             min="1"
                             max={product.stock}
                             defaultValue="1"
-                            placeholder="Quantity"
+                            onChange={(e) => handleProductQuantityChange(e, product.id)}
                         />
                     </div>
                 ))}
@@ -162,8 +183,7 @@ const PurchasePage = () => {
                             type="checkbox"
                             className="form-check-input"
                             id={`bundle-${bundle.id}`}
-                            value={bundle.id}
-                            onChange={handleBundleChange}
+                            onChange={(e) => handleBundleChange(e, bundle.id)}
                         />
                         <label className="form-check-label" htmlFor={`bundle-${bundle.id}`}>
                             {bundle.name} - Rp.{bundle.price} (Stock: {bundle.stock})
@@ -174,7 +194,7 @@ const PurchasePage = () => {
                             min="1"
                             max={bundle.stock}
                             defaultValue="1"
-                            placeholder="Quantity"
+                            onChange={(e) => handleBundleQuantityChange(e, bundle.id)}
                         />
                     </div>
                 ))}
