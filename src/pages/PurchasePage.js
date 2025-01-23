@@ -35,14 +35,20 @@ const PurchasePage = () => {
             const updated = [...prev];
             const index = updated.findIndex((product) => product.id === productId);
 
+            // Pengecekan apakah checkbox sudah di centang dan quantity ditambahkan atau tidak
             if (checked) {
+                // Kondisi ini berarti checkbox dicentang.
+                // Jika produk belum ada di daftar, maka produk baru akan ditambahkan ke daftar updated
                 if (index === -1) {
                     updated.push({ id: productId, quantity });
                 } else {
+                    // Namun jika sudah ada, hanya quantity saja yang diperbarui
                     updated[index].quantity = quantity;
                 }
+                // Kondisi ini belum dicentang
             } else {
                 if (index !== -1) {
+                    // Produk akan dihapus menggunakan splice dari daftar updated
                     updated.splice(index, 1);
                 }
             }
@@ -51,13 +57,16 @@ const PurchasePage = () => {
         });
     };
 
+    // Melakukan pengecekan jika quantity berubah
     const handleProductQuantityChange = (e, productId) => {
-        const quantity = parseInt(e.target.value) || 1;
+        const quantity = parseInt(e.target.value) || 1; // Mendapatkan nilai quantity baru
 
+        // Memperbarui daftar
         setSelectedProducts((prev) => {
             const updated = [...prev];
             const index = updated.findIndex((product) => product.id === productId);
 
+            // Mencari produk di daftar
             if (index !== -1) {
                 updated[index].quantity = quantity;
             }
@@ -90,6 +99,7 @@ const PurchasePage = () => {
         });
     };
 
+    // Mengecek apakah quantity berubah
     const handleBundleQuantityChange = (e, bundleId) => {
         const quantity = parseInt(e.target.value) || 1; // Pastikan kuantitas adalah bilangan bulat yang valid, defaultnya adalah 1.
 
@@ -106,7 +116,7 @@ const PurchasePage = () => {
     };
 
     const handleSubmit = (e) => {
-        e.preventDefault();
+        e.preventDefault(); // Menangani terjadinya submit data dalam bentuk default dan menggunakan logika custom
 
         if (selectedProducts.length === 0 && selectedBundles.length === 0) {
             setAlertMessage("No products or bundles selected for purchase.");
