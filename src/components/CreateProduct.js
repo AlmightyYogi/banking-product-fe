@@ -16,7 +16,7 @@ const CreateProduct = () => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
 
         // Validasi di Frontend
@@ -26,25 +26,25 @@ const CreateProduct = () => {
             return;
         }
 
-        createProduct(formData)
-            .then((response) => {
-                // Jika berhasil, tampilkan pesan sukses
-                if (response.status === 200) {
-                    setAlertMessage("Product created successfully!");
-                    setAlertType("success"); // Menampilkan alert sukses
-                }
-            })
-            .catch((error) => {
-                // Jika gagal, tampilkan pesan error
-                if (error.response && error.response.data) {
-                    const errorMessage = error.response.data.error || "An error occurred!";
-                    setAlertMessage(`Failed to create product: ${errorMessage}`);
-                    setAlertType("danger"); // Menampilkan alert error
-                } else {
-                    setAlertMessage("Failed to create product.");
-                    setAlertType("danger"); // Menampilkan alert error
-                }
-            });
+        try {
+            const response = await createProduct(formData);
+
+            // Kalo berhasil, tampilkan pesan sukses
+            if (response.status === 200) {
+                setAlertMessage("Product created successfully");
+                setAlertType("success");
+            }
+        } catch (error) {
+            // Jika gagal, tampilkan pesan error
+            if (error.response && error.response.data) {
+                const errorMessage = error.response.data.error || "An error occured";
+                setAlertMessage(`Failed to create product: ${errorMessage}`);
+                setAlertType("danger");
+            } else {
+                setAlertMessage("Failed to create product");
+                setAlertType("danger");
+            }
+        }
     };
 
     return (

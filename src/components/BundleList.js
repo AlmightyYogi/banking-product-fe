@@ -6,11 +6,17 @@ const BundleList = () => {
     const [bundles, setBundles] = useState([]);
 
     useEffect(() => {
-        fetchBundles().then((response) => {
-            setBundles(response.data);
-        }).catch((error) => {
-            console.error("Error fetching bundles", error);
-        });
+        // Menangkap data bundle
+        const fetchData = async () => {
+            try {
+                const response = await fetchBundles();
+                setBundles(response.data);
+            } catch (error) {
+                console.error("Error fetching bundles", error);
+            }
+        };
+
+        fetchData();
     }, []);
 
     return (

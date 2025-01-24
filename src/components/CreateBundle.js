@@ -16,13 +16,16 @@ const CreateBundle = () => {
     const [isStockReadOnly, setIsStockReadOnly] = useState(false); // Untuk mengatur apakah stock bisa diedit
 
     useEffect(() => {
-        fetchProducts()
-            .then((response) => {
+        const fetchData = async () => {
+            try {
+                const response = await fetchProducts();
                 setProducts(response.data);
-            })
-            .catch((error) => {
+            } catch (error) {
                 console.error("Error fetching products", error);
-            });
+            }
+        };
+
+        fetchData();
     }, []);
 
     const handleChange = (e) => {
@@ -60,7 +63,7 @@ const CreateBundle = () => {
         }
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
 
         // Validasi di Frontend
@@ -70,28 +73,23 @@ const CreateBundle = () => {
             return;
         }
 
-        createBundle(formData)
-            .then((response) => {
-                // Jika berhasil
-                if (response.status === 201) {
-                    setAlertMessage("Bundle created successfully!");
-                    setAlertType("success"); // Tampilkan alert sukses
-                    toast.success("Bundle created successfully");
-                }
-            })
-            .catch((error) => {
-                // Jika terjadi error
-                if (error.response && error.response.data) {
-                    const errorMessage = error.response.data.error || "An error occurred!";
-                    setAlertMessage(`Failed to create bundle: ${errorMessage}`);
-                    setAlertType("danger"); // Tampilkan alert error
-                } else {
-                    setAlertMessage("Failed to create bundle.");
-                    setAlertType("danger"); // Tampilkan alert error
-                }
-                toast.error("Failed to create bundle.");
-                console.error(error);
-            });
+        try {
+            const response = await createBundle(formData);
+
+            // Jika berhasil
+            if (response.status === 201) {
+                setAlertMessage("Bundle created successfully");
+                setAlertType("success");
+                toast.success("Bundle created successfully");
+            }
+        } catch(error) {
+            // Jika terjadi error
+            const errorMessage = error.response?.data?.error || "An error occured";
+            setAlertMessage(`Failed to create bundle: ${errorMessage}`);
+            setAlertType("danger");
+            toast.error("Failed to create bundle");
+            console.error(error);
+        }
     };
 
     return (

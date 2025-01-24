@@ -16,21 +16,23 @@ const EditProduct = () => {
     const [alertType, setAlertType] = useState("");
 
     useEffect(() => {
-        // console.log("Fetching product with id:", id);
-        fetchProductById(id).then((response) => {
-            // console.log("Product data received:", response.data);
-            
-            // Cek kalo response.data adalah array dan ambil yg pertama
-            if (response.data && response.data.length > 0) {
-                setProduct(response.data[0]);
-            } else {
-                console.error("Product not found");
-                toast.error("Product not found")
+        // Menangkap data product berdasarkan id
+        const fetchData = async () => {
+            try {
+                // Melakukan pengecekan product berdasarkan id
+                const [response] = await Promise.all([fetchProductById(id)]);
+                if (response.data && response.data.length > 0) {
+                    setProduct(response.data[0]);
+                } else {
+                    toast.error("Product not found");
+                }
+            } catch (error) {
+                console.error("Error fetching product:", error);
+                toast.error("Failed to fetch product data.");
             }
-        }).catch((error) => {
-            console.error("Error fetching product:", error);
-            toast.error("Failed to fetch product data.");
-        });
+        };
+
+        fetchData();
     }, [id]);
 
     const handleChange = (e) => {
@@ -41,23 +43,26 @@ const EditProduct = () => {
         }));
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
 
         const { name, price, stock, description } = product;
 
-        updateProduct(id, { name, price, stock, description })
-            .then((response) => {
-                setAlertMessage(response.data.message);
-                setAlertType("success");
-                toast.success(response.data.message);
-                navigate("/");
-            })
-            .catch((error) => {
-                setAlertMessage(error.response?.data?.error || "Failed to update product");
-                setAlertType("danger");
-                toast.error(error.response?.data?.error || "Failed to update product");
-            });
+        try {
+            const response = await updateProduct(id, { name, price, stock, description });
+
+            // Menangani respon sukses
+            setAlertMessage(response.data.message);
+            setAlertType("success");
+            toast.success(response.data.message);
+            navigate("/");
+        } catch (error) {
+            // Menangani error
+            const errorMessage = error.response?.data?.error || "Failed to update product";
+            setAlertMessage(errorMessage);
+            setAlertType("danger");
+            toast.error(errorMessage);
+        }
     };
 
     // console.log("Product state:", product);

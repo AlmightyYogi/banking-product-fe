@@ -6,11 +6,17 @@ const ProductList = () => {
     const [products, setProducts] = useState([]);
 
     useEffect(() => {
-        fetchProducts().then((response) => {
-            setProducts(response.data);
-        }).catch((error) => {
-            console.error("Error fetching products:", error);
-        });
+        // Menangkap data product
+        const fetchData = async () => {
+            try {
+                const [productResponse] = await Promise.all([fetchProducts()]);
+                setProducts(productResponse.data);
+            } catch (error) {
+                console.error("Error fetching products:", error);
+            }
+        };
+
+        fetchData();
     }, []);
 
     return (

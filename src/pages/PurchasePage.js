@@ -11,21 +11,23 @@ const PurchasePage = () => {
     const [alertType, setAlertType] = useState("");
 
     useEffect(() => {
-        fetchProducts()
-            .then((response) => {
-                setProducts(response.data);
-            })
-            .catch((error) => {
-                console.error("Error fetching products", error);
-            });
+        const fetchData = async () => {
+            try {
+                // Mengambil data products dan bundles secara parallel
+                const [productResponse, bundleResponse] = await Promise.all([
+                    fetchProducts(),
+                    fetchBundles(),
+                ]);
 
-        fetchBundles()
-            .then((response) => {
-                setBundles(response.data);
-            })
-            .catch((error) => {
-                console.error("Error fetching bundles", error);
-            });
+                // Menyimpan hasilnya ke dalam state
+                setProducts(productResponse.data);
+                setBundles(bundleResponse.data);
+            } catch (error) {
+                console.error("Error fetching data:", error);
+            }
+        };
+
+        fetchData();
     }, []);
 
     const handleProductChange = (e, productId, quantity) => {
@@ -77,45 +79,44 @@ const PurchasePage = () => {
 
     const handleBundleChange = (e, bundleId) => {
         const { checked } = e.target;
-        const quantity = checked ? 1 : 0; // Tetapkan jumlah default ke 1 jika dicentang, 0 jika tidak dicentang.
-
+        const quantity = checked ? 1 : 0; // Menetapkan jumlah default menjadi 1 jika dicentang, 0 jika tidak dicentang.
+    
         setSelectedBundles((prev) => {
             const updated = [...prev];
             const index = updated.findIndex((bundle) => bundle.id === bundleId);
-
+    
             if (checked) {
                 if (index === -1) {
                     updated.push({ id: bundleId, quantity });
                 } else {
-                    updated[index].quantity = quantity;
+                    updated[index].quantity = quantity; // Set quantity ke 1 ketika dicentang
                 }
             } else {
                 if (index !== -1) {
-                    updated.splice(index, 1);
+                    updated.splice(index, 1); // Menghapus bundle jika tidak dicentang
                 }
             }
-
+    
             return updated;
         });
     };
-
-    // Mengecek apakah quantity berubah
+    
     const handleBundleQuantityChange = (e, bundleId) => {
-        const quantity = parseInt(e.target.value) || 1; // Pastikan kuantitas adalah bilangan bulat yang valid, defaultnya adalah 1.
-
+        const quantity = parseInt(e.target.value) || 1; // Mengambil nilai quantity baru dari input
+    
         setSelectedBundles((prev) => {
             const updated = [...prev];
             const index = updated.findIndex((bundle) => bundle.id === bundleId);
-
+    
             if (index !== -1) {
-                updated[index].quantity = quantity; // Perbarui kuantitas untuk paket yang dipilih.
+                updated[index].quantity = quantity; // Memperbarui quantity bundle sesuai input pengguna
             }
-
+    
             return updated;
         });
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault(); // Menangani terjadinya submit data dalam bentuk default dan menggunakan logika custom
 
         if (selectedProducts.length === 0 && selectedBundles.length === 0) {
@@ -124,30 +125,30 @@ const PurchasePage = () => {
             return;
         }
 
-        purchaseItems({ products: selectedProducts, bundles: selectedBundles })
-            .then((response) => {
-                if (response.status === 200) {
-                    setAlertMessage(`Purchase successful! Total cost: Rp.${response.data.totalCost}`);
-                    setAlertType("success");
-                    toast.success(`Purchase successful! Total cost: Rp.${response.data.totalCost}`);
+        try {
+            const response = await purchaseItems({ products: selectedProducts, bundles: selectedBundles });
 
-                    setTimeout(() => {
-                        window.location.reload();
-                    }, 2000);
-                }
-            })
-            .catch((error) => {
-                if (error.response && error.response.data) {
-                    const errorMessage = error.response.data.error || "An error occurred";
-                    setAlertMessage(`Failed to process purchase: ${errorMessage}`);
-                    setAlertType("danger");
-                } else {
-                    setAlertMessage("Failed to process purchase");
-                    setAlertType("danger");
-                }
-                toast.error("Failed to process purchase");
-                console.error(error);
-            });
+            if (response.status === 200) {
+                setAlertMessage(`Purchase successful! Total cost: Rp.${response.data.totalCost}`);
+                setAlertType("success");
+                toast.success(`Purchase successful! Total cost: Rp.${response.data.totalCost}`);
+
+                setTimeout(() => {
+                    window.location.reload();
+                }, 2000);
+            }
+        } catch (error) {
+            if (error.response && error.response.data) {
+                const errorMessage = error.response.data.error || "An error occured";
+                setAlertMessage(`Failed to process purchase: ${errorMessage}`);
+                setAlertType("danger");
+            } else {
+                setAlertMessage("Failed to process purchase");
+                setAlertType("danger");
+            }
+            toast.error("Failed to process purchase");
+            console.error(error);
+        }
     };
 
     return (
@@ -201,9 +202,7 @@ const PurchasePage = () => {
                         <input
                             type="number"
                             className="form-control mt-2"
-                            min="1"
-                            max={bundle.stock}
-                            defaultValue="1"
+                            value={selectedBundles.find((b) => b.id === bundle.id)?.quantity || 1}
                             onChange={(e) => handleBundleQuantityChange(e, bundle.id)}
                         />
                     </div>

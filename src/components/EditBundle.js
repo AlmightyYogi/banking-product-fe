@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { fetchBundleById, fetchProducts, updateBundle } from "../services/api";
+import { fetchBundleById, fetchBundles, fetchProducts, updateBundle } from "../services/api";
 import { toast } from "react-toastify";
 
 const EditBundle = () => {
@@ -18,29 +18,25 @@ const EditBundle = () => {
     const [alertType, setAlertType] = useState([]);
 
     useEffect(() => {
-        // Nangkap data product yang tersedia ke dropdown
-        fetchProducts().then((response) => {
-            setProducts(response.data);
-        }).catch((error) => {
-            console.error("Error fetching products:", error);
-            toast.error("Failed to fetch products.");
-        });
-
-        // console.log("Fetching bundle with id:", id);
-        // Nangkap bundle berdasarkan id
-        fetchBundleById(id).then((response) => {
-            // console.log("Bundle data received:", response.data);
-            
-            if (response.data && response.data.length > 0) {
-                setBundle(response.data[0]);
-            } else {
-                console.error("Bundle not found");
-                toast.error("Bundle not found");
+        const fetchData = async () => {
+            try {
+                const [productResponse, bundleResponse] = await Promise.all([
+                    fetchProducts(),
+                    fetchBundles(id),
+                ]);
+                setProducts(productResponse.data);
+                if (bundleResponse.data.length > 0) {
+                    setBundle(bundleResponse.data[0]);
+                } else {
+                    throw new Error("Bundle not found");
+                }
+            } catch (error) {
+                toast.error("Failed to fetch data");
+                console.error(error);
             }
-        }).catch((error) => {
-            console.error("Error fetching bundle:", error);
-            toast.error("Failed to fetch bundle data.");
-        });
+        };
+
+        fetchData();
     }, [id]);
 
     const handleChange = (e) => {
@@ -51,7 +47,7 @@ const EditBundle = () => {
         }));
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
 
         const { name, product_id, price, stock, description } = bundle;
@@ -63,18 +59,18 @@ const EditBundle = () => {
         }
 
         // Melakukan update bundle dari API
-        updateBundle(id, { name, product_id, price, stock, description })
-            .then((response) => {
-                setAlertMessage(response.data.message);
-                setAlertType("success");
-                toast.success(response.data.message);
-                navigate("/");
-            })
-            .catch((error) => {
-                setAlertMessage(error.response?.data?.error || "Failed to update bundle");
-                setAlertType("danger");
-                toast.error(error.response?.data?.error || "Failed to update bundle");
-            });
+        try {
+            const response = await updateBundle(id, { name, product_id, price, stock, description });
+
+            setAlertMessage(response.data.message);
+            setAlertType("success");
+            toast.success(response.data.message);
+            navigate("/");
+        } catch (error) {
+            setAlertMessage(error.response?.data?.error || "Failed to update bundle");
+            setAlertType("danger");
+            toast.error(error.response?.data?.error || "Failed to update bundle");
+        }
     };
 
     return (
