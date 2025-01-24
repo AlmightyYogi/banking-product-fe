@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { fetchBundleById, fetchBundles, fetchProducts, updateBundle } from "../services/api";
+import { fetchBundleById, fetchProducts, updateBundle } from "../services/api";
 import { toast } from "react-toastify";
 
 const EditBundle = () => {
@@ -14,25 +14,25 @@ const EditBundle = () => {
         description: "",
     });
     const [products, setProducts] = useState([]);
-    const [alertMessage, setAlertMessage] = useState([]);
-    const [alertType, setAlertType] = useState([]);
+    const [alertMessage, setAlertMessage] = useState("");
+    const [alertType, setAlertType] = useState("");
 
     useEffect(() => {
+        // Mengambil data produk dan bundle berdasarkan ID
         const fetchData = async () => {
             try {
-                const [productResponse, bundleResponse] = await Promise.all([
-                    fetchProducts(),
-                    fetchBundles(id),
-                ]);
+                const productResponse = await fetchProducts();
                 setProducts(productResponse.data);
-                if (bundleResponse.data.length > 0) {
-                    setBundle(bundleResponse.data[0]);
+
+                const bundleResponse = await fetchBundleById(id);
+                if (bundleResponse.data && bundleResponse.data.length > 0) {
+                    setBundle(bundleResponse.data[0]); // Set data bundle ke form
                 } else {
-                    throw new Error("Bundle not found");
+                    toast.error("Bundle not found");
                 }
             } catch (error) {
+                console.error("Error fetching data:", error);
                 toast.error("Failed to fetch data");
-                console.error(error);
             }
         };
 
@@ -43,7 +43,7 @@ const EditBundle = () => {
         const { name, value } = e.target;
         setBundle((prevBundle) => ({
             ...prevBundle,
-            [name]: value
+            [name]: value,
         }));
     };
 
@@ -54,22 +54,21 @@ const EditBundle = () => {
 
         if (!name || !product_id || !price || !stock || !description) {
             setAlertMessage("All fields are required");
-            setAlertType("danger")
+            setAlertType("danger");
             return;
         }
 
-        // Melakukan update bundle dari API
         try {
             const response = await updateBundle(id, { name, product_id, price, stock, description });
-
             setAlertMessage(response.data.message);
             setAlertType("success");
             toast.success(response.data.message);
             navigate("/");
         } catch (error) {
-            setAlertMessage(error.response?.data?.error || "Failed to update bundle");
+            const errorMessage = error.response?.data?.error || "Failed to update bundle";
+            setAlertMessage(errorMessage);
             setAlertType("danger");
-            toast.error(error.response?.data?.error || "Failed to update bundle");
+            toast.error(errorMessage);
         }
     };
 
@@ -77,7 +76,7 @@ const EditBundle = () => {
         <div>
             <h2>Edit Bundle</h2>
 
-            {/* Alert dengan pesan */}
+            {/* Alert untuk pesan */}
             {alertMessage && (
                 <div className={`alert alert-${alertType}`} role="alert">
                     {alertMessage}
