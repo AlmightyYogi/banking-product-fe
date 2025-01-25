@@ -1,0 +1,16 @@
+.product-card,
+.bundle-card {
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.product-card:hover,
+.bundle-card:hover {
+    transform: scale(1.05);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+}
+
+.selected .card {
+    border: 2px solid #007bff;
+    background-color: #e9f7ff;
+}
