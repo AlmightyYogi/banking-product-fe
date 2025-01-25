@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from "react";
 import { fetchProducts } from "../services/api";
-import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
+import "./ProductList.css";
 
 const ProductList = () => {
     const [products, setProducts] = useState([]);
+    const navigate = useNavigate();
 
     useEffect(() => {
         // Menangkap data product
@@ -19,33 +21,50 @@ const ProductList = () => {
         fetchData();
     }, []);
 
+    const handleCardClick = (productId) => {
+        navigate(`/bundles/${productId}`);
+    };
+
+    const handleEditClick = (productId) => {
+        navigate(`/edit-product/${productId}`);
+    };
+
     return (
-        <div>
+        <div className="container mt-4">
             <h2 className="mb-4">Product List</h2>
-            <table className="table table-striped table-bordered">
-                <thead>
-                    <tr>
-                        <th>Name</th>
-                        <th>Price</th>
-                        <th>Stock</th>
-                        <th>Action</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {products.map((product) => (
-                        <tr key={product.id}>
-                            <td>{product.name}</td>
-                            <td>{product.price}</td>
-                            <td>{product.stock}</td>
-                            <td>
-                                <Link to={`/edit-product/${product.id}`} className="btn btn-warning">
+            <div className="row">
+                {products.map((product) => (
+                    <div
+                        key={product.id}
+                        className="col-md-4 mb-4"
+                        onClick={() => handleCardClick(product.id)}
+                    >
+                        <div className="card product-card shadow-sm">
+                            <div className="card-body">
+                                <h5 className="card-title">{product.name}</h5>
+                                <p className="card-text">
+                                    <strong>Price:</strong> {product.price}
+                                </p>
+                                <p className="card-text">
+                                    <strong>Stock:</strong> {product.stock}
+                                </p>
+                                <p className="card-text">
+                                    <strong>Description:</strong> {product.description || "No description available."}
+                                </p>
+                                <button
+                                    className="btn btn-warning mt-2"
+                                    onClick={(e) => {
+                                        e.stopPropagation(); // Cegah navigasi ke halaman bundle
+                                        handleEditClick(product.id);
+                                    }}
+                                >
                                     Edit
-                                </Link>
-                            </td>
-                        </tr>
-                    ))}
-                </tbody>
-            </table>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                ))}
+            </div>
         </div>
     );
 };
