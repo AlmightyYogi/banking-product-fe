@@ -1,11 +1,10 @@
 import React, { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { fetchBundleById, fetchProducts, updateBundle } from "../services/api";
 import { toast } from "react-toastify";
 
 const EditBundle = () => {
     const { id } = useParams();
-    const navigate = useNavigate();
     const [bundle, setBundle] = useState({
         name: "",
         product_id: "",
@@ -63,7 +62,6 @@ const EditBundle = () => {
             setAlertMessage(response.data.message);
             setAlertType("success");
             toast.success(response.data.message);
-            navigate("/");
         } catch (error) {
             const errorMessage = error.response?.data?.error || "Failed to update bundle";
             setAlertMessage(errorMessage);
