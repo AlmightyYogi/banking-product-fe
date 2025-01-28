@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { createProduct } from "../services/api";
+import { toast } from "react-toastify";
 
 const CreateProduct = () => {
     const [formData, setFormData] = useState({
@@ -32,6 +33,9 @@ const CreateProduct = () => {
             if (response.status === 200) {
                 setAlertMessage("Product created successfully");
                 setAlertType("success");
+                toast.success("Product created successfully");
+
+                setTimeout(() => window.location.reload(), 2000);
             }
         } catch (error) {
             // Jika gagal, tampilkan pesan error
