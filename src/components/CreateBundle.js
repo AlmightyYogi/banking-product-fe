@@ -30,37 +30,45 @@ const CreateBundle = () => {
 
     const handleChange = (e) => {
         const { name, value } = e.target;
-        setFormData({ ...formData, [name]: value });
-
-        // Jika nama produk dan bundle sama, set stok bundle mengikuti stok produk
-        if (name === "name" && value === formData.product_id) {
-            const selectedProduct = products.find(product => product.id === formData.product_id);
-            if (selectedProduct) {
+    
+        if (name === "name") {
+            const matchingProduct = products.find(
+                (product) => product.name.toLowerCase() === value.toLowerCase()
+            );
+    
+            if (matchingProduct) {
                 setFormData({
                     ...formData,
-                    stock: selectedProduct.stock, // Set stock bundle sama dengan stock product
+                    name: value,
+                    product_id: matchingProduct.id,
+                    stock: matchingProduct.stock,
                 });
-                setIsStockReadOnly(true); // Set stok menjadi read-only
+                setIsStockReadOnly(true); // Stok menjadi read-only
+            } else {
+                setFormData({ ...formData, name: value, product_id: "", stock: "" });
+                setIsStockReadOnly(false); // Stok bisa diedit
             }
+        } else {
+            setFormData({ ...formData, [name]: value });
         }
     };
 
     const handleProductChange = (e) => {
         const selectedProductId = e.target.value;
-        setFormData({
-            ...formData,
-            product_id: selectedProductId,
-            stock: "", // Reset stock menjadi kosong atau default value
-        });
+        
+        const selectedProduct = products.find((product) => product.id === selectedProductId);
 
-        const selectedProduct = products.find(product => product.id === selectedProductId);
-        if (selectedProduct) {
-            setFormData({
-                ...formData,
-                stock: selectedProduct.stock, // Set stock bundle sesuai stock product
-            });
-            setIsStockReadOnly(false); // Biarkan stok bisa diedit jika produk baru dipilih
-        }
+        setFormData((prevFormData) => ({
+            ...prevFormData,
+            product_id: selectedProductId,
+            stock: selectedProduct ? selectedProduct.stock : "",
+        }));
+
+        if (selectedProduct && selectedProduct.name.toLowerCase() === formData.name.toLowerCase()) {
+            setIsStockReadOnly(true);
+        } else {
+            setIsStockReadOnly(false);
+        };
     };
 
     const handleSubmit = async (e) => {
@@ -81,6 +89,8 @@ const CreateBundle = () => {
                 setAlertMessage("Bundle created successfully");
                 setAlertType("success");
                 toast.success("Bundle created successfully");
+
+                setTimeout(() => window.location.reload(), 2000);
             }
         } catch(error) {
             // Jika terjadi error
