@@ -29,6 +29,17 @@ const ProductList = () => {
         navigate(`/edit-product/${productId}`);
     };
 
+    const formatCurrency = (amount) => {
+        return new Intl.NumberFormat("id-ID", {
+            style: "currency",
+            currency: "IDR",
+            minimumFractionDigits: 0,
+        })
+            .format(amount)
+            .replace("Rp", "")
+            .trim();
+    };
+
     return (
         <div className="container mt-4">
             <h2 className="mb-4">Product List</h2>
@@ -43,7 +54,7 @@ const ProductList = () => {
                             <div className="card-body">
                                 <h5 className="card-title">{product.name}</h5>
                                 <p className="card-text">
-                                    <strong>Price:</strong> {product.price}
+                                    <strong>Price:</strong> Rp.{formatCurrency(product.price)}
                                 </p>
                                 <p className="card-text">
                                     <strong>Stock:</strong> {product.stock}

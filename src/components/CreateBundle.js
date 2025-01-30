@@ -28,6 +28,12 @@ const CreateBundle = () => {
         fetchData();
     }, []);
 
+    const formatCurrencyInput = (value) => {
+        const numericValue = value.replace(/\D/g, "");
+
+        return new Intl.NumberFormat("id-ID").format(numericValue);
+    };
+
     const handleChange = (e) => {
         const { name, value } = e.target;
     
@@ -48,6 +54,11 @@ const CreateBundle = () => {
                 setFormData({ ...formData, name: value, product_id: "", stock: "" });
                 setIsStockReadOnly(false); // Stok bisa diedit
             }
+        } else if (name === "price") {
+            setFormData({
+                ...formData,
+                price: formatCurrencyInput(value),
+            });
         } else {
             setFormData({ ...formData, [name]: value });
         }
@@ -74,6 +85,8 @@ const CreateBundle = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
 
+        const cleanPrice = formData.price.replace(/\./g, "");
+
         // Validasi di Frontend
         if (!formData.name || !formData.product_id || !formData.price || !formData.stock || !formData.description) {
             setAlertMessage("All fields are required.");
@@ -82,7 +95,10 @@ const CreateBundle = () => {
         }
 
         try {
-            const response = await createBundle(formData);
+            const response = await createBundle({
+                ...formData,
+                price: cleanPrice,
+            });
 
             // Jika berhasil
             if (response.status === 201) {

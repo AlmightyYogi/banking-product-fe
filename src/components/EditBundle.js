@@ -16,6 +16,20 @@ const EditBundle = () => {
     const [alertMessage, setAlertMessage] = useState("");
     const [alertType, setAlertType] = useState("");
 
+    const formatCurrency = (value) => {
+        return new Intl.NumberFormat('id-ID', {
+            style: 'currency',
+            currency: 'IDR',
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 0,
+        }).format(value);
+    };
+
+    // Fungsi untuk mengubah string menjadi angka tanpa mempengaruhi format
+    const parseCurrency = (value) => {
+        return value.replace(/[^\d]/g, '');
+    };
+
     useEffect(() => {
         // Mengambil data produk dan bundle berdasarkan ID
         const fetchData = async () => {
@@ -40,10 +54,19 @@ const EditBundle = () => {
 
     const handleChange = (e) => {
         const { name, value } = e.target;
-        setBundle((prevBundle) => ({
-            ...prevBundle,
-            [name]: value,
-        }));
+
+        if (name === "price") {
+            const numericValue = parseCurrency(value);
+            setBundle((prevBundle) => ({
+                ...prevBundle,
+                [name]: numericValue,
+            }));
+        } else {
+            setBundle((prevBundle) => ({
+                ...prevBundle,
+                [name]: value,
+            }));
+        }
     };
 
     const handleSubmit = async (e) => {
@@ -74,7 +97,6 @@ const EditBundle = () => {
         <div>
             <h2>Edit Bundle</h2>
 
-            {/* Alert untuk pesan */}
             {alertMessage && (
                 <div className={`alert alert-${alertType}`} role="alert">
                     {alertMessage}
@@ -114,11 +136,11 @@ const EditBundle = () => {
                 <div className="mb-3">
                     <label htmlFor="price" className="form-label">Price</label>
                     <input
-                        type="number"
+                        type="text"
                         className="form-control"
                         id="price"
                         name="price"
-                        value={bundle.price || ""}
+                        value={bundle.price ? formatCurrency(bundle.price) : ""}
                         onChange={handleChange}
                     />
                 </div>

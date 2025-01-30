@@ -56,6 +56,17 @@ const BundleSelection = () => {
         );
     };
 
+    const formatCurrency = (amount) => {
+        return new Intl.NumberFormat("id-ID", {
+            style: "currency",
+            currency: "IDR",
+            minimumFractionDigits: 0,
+        })
+            .format(amount)
+            .replace("Rp", "")
+            .trim();
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
 
@@ -130,7 +141,7 @@ const BundleSelection = () => {
                                 <div className="card-body">
                                     <h5 className="card-title">{bundle.name}</h5>
                                     <p className="card-text">
-                                        <strong>Price:</strong> Rp.{bundle.price}
+                                        <strong>Price:</strong> Rp.{formatCurrency(bundle.price)}
                                     </p>
                                     <p className="card-text">
                                         <strong>Stock:</strong> {bundle.stock}

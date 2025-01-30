@@ -15,11 +15,24 @@ const EditProduct = () => {
     const [alertMessage, setAlertMessage] = useState("");
     const [alertType, setAlertType] = useState("");
 
+    const formatCurrency = (value) => {
+        return new Intl.NumberFormat('id-ID', {
+            style: 'currency',
+            currency: 'IDR',
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 0,
+        }).format(value);
+    };
+
+    // Fungsi untuk mengubah string menjadi angka tanpa mempengaruhi format
+    const parseCurrency = (value) => {
+        return value.replace(/[^\d]/g, '');
+    };
+
     useEffect(() => {
         // Menangkap data product berdasarkan id
         const fetchData = async () => {
             try {
-                // Melakukan pengecekan product berdasarkan id
                 const [response] = await Promise.all([fetchProductById(id)]);
                 if (response.data && response.data.length > 0) {
                     setProduct(response.data[0]);
@@ -37,10 +50,19 @@ const EditProduct = () => {
 
     const handleChange = (e) => {
         const { name, value } = e.target;
-        setProduct((prevProduct) => ({
-            ...prevProduct,
-            [name]: value,
-        }));
+
+        if (name === "price") {
+            const numericValue = parseCurrency(value);
+            setProduct((prevProduct) => ({
+                ...prevProduct,
+                [name]: numericValue,
+            }));
+        } else {
+            setProduct((prevProduct) => ({
+                ...prevProduct,
+                [name]: value,
+            }));
+        }
     };
 
     const handleSubmit = async (e) => {
@@ -51,13 +73,11 @@ const EditProduct = () => {
         try {
             const response = await updateProduct(id, { name, price, stock, description });
 
-            // Menangani respon sukses
             setAlertMessage(response.data.message);
             setAlertType("success");
             toast.success(response.data.message);
             navigate("/");
         } catch (error) {
-            // Menangani error
             const errorMessage = error.response?.data?.error || "Failed to update product";
             setAlertMessage(errorMessage);
             setAlertType("danger");
@@ -65,13 +85,10 @@ const EditProduct = () => {
         }
     };
 
-    // console.log("Product state:", product);
-
     return (
         <div>
             <h2>Edit Product</h2>
 
-            {/* Alert untuk pesan */}
             {alertMessage && (
                 <div className={`alert alert-${alertType}`} role="alert">
                     {alertMessage}
@@ -94,11 +111,11 @@ const EditProduct = () => {
                 <div className="mb-3">
                     <label htmlFor="price" className="form-label">Price</label>
                     <input
-                        type="number"
+                        type="text"
                         className="form-control"
                         id="price"
                         name="price"
-                        value={product.price || ""}
+                        value={product.price ? formatCurrency(product.price) : ""}
                         onChange={handleChange}
                     />
                 </div>

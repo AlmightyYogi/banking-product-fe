@@ -12,12 +12,32 @@ const CreateProduct = () => {
     const [alertMessage, setAlertMessage] = useState(""); // State untuk menyimpan pesan alert
     const [alertType, setAlertType] = useState(""); // State untuk tipe alert (success atau error)
 
+    const formatCurrencyInput = (value) => {
+        const numericValue = value.replace(/\D/g, "");
+
+        return new Intl.NumberFormat("id-ID").format(numericValue);
+    };
+
     const handleChange = (e) => {
-        setFormData({ ...formData, [e.target.name]: e.target.value });
+        const { name, value } = e.target;
+
+        if (name === "price") {
+            setFormData({
+                ...formData,
+                price: formatCurrencyInput(value),
+            });
+        } else {
+            setFormData({
+                ...formData,
+                [name]: value,
+            });
+        }
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+
+        const cleanPrice = formData.price.replace(/\./g, "");
 
         // Validasi di Frontend
         if (!formData.name || !formData.price || !formData.stock || !formData.description) {
@@ -27,7 +47,10 @@ const CreateProduct = () => {
         }
 
         try {
-            const response = await createProduct(formData);
+            const response = await createProduct({
+                ...formData,
+                price: cleanPrice,
+            });
 
             // Kalo berhasil, tampilkan pesan sukses
             if (response.status === 200) {
