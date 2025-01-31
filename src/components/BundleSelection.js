@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from "react";
-import { fetchBundles, fetchProductById, purchaseItems } from "../services/api";
+import { fetchBundleByProductId, fetchProductById, purchaseItems } from "../services/api";
 import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
 
 const BundleSelection = () => {
     const { productId } = useParams();
-    const [bundles, setBundles] = useState([]);
+    const [bundleByProductId, setBundleByProductId] = useState([]);
     const [selectedBundles, setSelectedBundles] = useState([]);
     const [alertMessage, setAlertMessage] = useState("");
     const [alertType, setAlertType] = useState("");
@@ -13,26 +13,31 @@ const BundleSelection = () => {
     const navigate = useNavigate();
 
     useEffect(() => {
+        let isMounted = true;
+
         const fetchData = async () => {
             try {
-                const response = await fetchBundles(productId);
-                setBundles(response.data);
-            } catch (error) {
-                console.error("Error fetching bundles:", error);
-            }
-        };
+                const [bundleResponse, productReponse] = await Promise.all([
+                    fetchBundleByProductId(productId),
+                    fetchProductById(productId),
+                ]);
 
-        const fetchProductData = async () => {
-            try {
-                const response = await fetchProductById(productId);
-                setProductName(response.data[0]?.name);
+                if (isMounted) {
+                    setBundleByProductId(bundleResponse.data);
+                    setProductName(productReponse.data[0]?.name);
+                    console.log("Response Bundles:", bundleResponse.data);
+                    console.log("Response Product:", productReponse.data);
+                }
             } catch (error) {
-                console.error("Error fetching product:", error);
+                console.error("Error fetching data:", error);
             }
         };
 
         fetchData();
-        fetchProductData();
+
+        return () => {
+            isMounted = false;
+        };
     }, [productId]);
 
     const handleBundleSelection = (bundleId) => {
@@ -78,12 +83,16 @@ const BundleSelection = () => {
 
         try {
             const payload = {
-                products: [],
+                products: [
+                    { id: productId, quantity: 1 },
+                ],
                 bundles: selectedBundles.map((b) => ({
                     id: b.id,
                     quantity: b.quantity,
                 })),
             };
+
+            console.log("Payload:", payload);
 
             const response = await purchaseItems(payload);
 
@@ -126,7 +135,7 @@ const BundleSelection = () => {
             )}
 
             <div className="row">
-                {bundles.map((bundle) => {
+                {bundleByProductId.map((bundle) => {
                     const isSelected = selectedBundles.some((b) => b.id === bundle.id);
                     const selectedBundle = selectedBundles.find((b) => b.id === bundle.id);
 
