@@ -173,7 +173,7 @@ const CreateBundle = () => {
                     onChange={handleChange}
                     required
                     value={formData.stock}
-                    readOnly={isStockReadOnly} // Stok menjadi read-only jika produk dan nama bundle sama
+                    readOnly={isStockReadOnly}
                 />
             </div>
             <div className="mb-3">
