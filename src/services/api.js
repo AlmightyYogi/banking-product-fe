@@ -14,6 +14,7 @@ export const updateProduct = (id, data) => API.put(`/products/${id}`, data);
 export const fetchBundles = () => API.get("/bundles");
 export const createBundle = (data) => API.post("/bundles", data);
 export const fetchBundleById = (id) => API.get(`/bundles/${id}`);
+export const fetchBundleByProductId = (product_id) => API.get(`/bundles/from/${product_id}`);
 export const updateBundle = (id, data) => API.put(`/bundles/${id}`, data);
 
 // Purchase
